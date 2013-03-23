@@ -138,6 +138,10 @@ if not INDEX_FILE:
   INDEX_FILE = join(STORAGE_DIR, 'index')
 if not LOG_DIR:
   LOG_DIR = join(STORAGE_DIR, 'log', 'webapp')
+  
+if not os.path.exists (LOG_DIR):
+    os.makedirs (LOG_DIR)
+
 if not WHISPER_DIR:
   WHISPER_DIR = join(STORAGE_DIR, 'whisper/')
 if not RRD_DIR:

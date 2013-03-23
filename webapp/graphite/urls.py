@@ -36,3 +36,5 @@ urlpatterns = patterns('',
 )
 
 handler500 = 'graphite.views.server_error'
+
+

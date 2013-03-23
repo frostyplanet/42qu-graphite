@@ -15,7 +15,8 @@ limitations under the License."""
 from django.conf.urls.defaults import *
 
 urlpatterns = patterns('graphite.render.views',
-  ('local/?$','renderLocalView'),
+#  ('local/?$','renderLocalView'),
 #  ('~(?P<username>[^/]+)/(?P<graphName>[^/]+)/?','renderMyGraphView'),
-  ('', 'renderView'),
+  ('(\w+)/.*?$', 'renderView'),
 )
+

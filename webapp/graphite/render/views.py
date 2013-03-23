@@ -40,16 +40,31 @@ from graphite.render.functions import PieFunctions
 from graphite.render.hashing import hashRequest, hashData
 from graphite.render.glyph import GraphTypes
 
-from django.http import HttpResponse, HttpResponseServerError, HttpResponseRedirect
+from django.http import HttpResponse, HttpResponseServerError, HttpResponseRedirect, HttpResponseNotFound
 from django.template import Context, loader
 from django.core.cache import cache
 from django.core.exceptions import ObjectDoesNotExist
 from django.conf import settings
+import hashlib
+
+def _auth (key, requestOptions):
+  if not settings.AUTH_KEY:
+    return True
+  targets = requestOptions['targets']
+  targets.sort ()
+  s1 = settings.AUTH_KEY + "".join (targets)
+  _md5 = hashlib.md5()
+  _md5.update (s1)
+  return key == _md5.hexdigest ()
 
 
-def renderView(request):
+def renderView(request, key):
   start = time()
   (graphOptions, requestOptions) = parseOptions(request)
+
+  if not _auth (key, requestOptions):
+    return HttpResponseNotFound ("not found")
+
   useCache = 'noCache' not in requestOptions
   cacheTimeout = requestOptions['cacheTimeout']
   requestContext = {
@@ -322,21 +337,21 @@ def delegateRendering(graphType, graphOptions):
       continue
 
 
-def renderLocalView(request):
-  try:
-    start = time()
-    reqParams = StringIO(request.raw_post_data)
-    graphType = reqParams.readline().strip()
-    optionsPickle = reqParams.read()
-    reqParams.close()
-    graphClass = GraphTypes[graphType]
-    options = pickle.loads(optionsPickle)
-    image = doImageRender(graphClass, options)
-    log.rendering("Delegated rendering request took %.6f seconds" % (time() -  start))
-    return buildResponse(image)
-  except:
-    log.exception("Exception in graphite.render.views.rawrender")
-    return HttpResponseServerError()
+#def renderLocalView(request):
+#  try:
+#    start = time()
+#    reqParams = StringIO(request.raw_post_data)
+#    graphType = reqParams.readline().strip()
+#    optionsPickle = reqParams.read()
+#    reqParams.close()
+#    graphClass = GraphTypes[graphType]
+#    options = pickle.loads(optionsPickle)
+#    image = doImageRender(graphClass, options)
+#    log.rendering("Delegated rendering request took %.6f seconds" % (time() -  start))
+#    return buildResponse(image)
+#  except:
+#    log.exception("Exception in graphite.render.views.rawrender")
+#    return HttpResponseServerError()
 
 
 #def renderMyGraphView(request,username,graphName):
@@ -397,3 +412,5 @@ def errorPage(message):
   template = loader.get_template('500.html')
   context = Context(dict(message=message))
   return HttpResponseServerError( template.render(context) )
+
+# vim: tabstop=2 expandtab shiftwidth=2 softtabstop=2 :

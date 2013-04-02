@@ -24,7 +24,7 @@ def main(port):
             [('.*', tornado.web.FallbackHandler, dict(fallback=wsgi_app)),
                 ])
     server = tornado.httpserver.HTTPServer(tornado_app)
-    server.listen(port)
+    server.listen(port, address="127.0.0.1")
     tornado.ioloop.IOLoop.instance().start()
 
 if __name__ == '__main__':
